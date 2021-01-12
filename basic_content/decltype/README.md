@@ -18,9 +18,28 @@ decltype (expression)
 
 ### 1.1 推导出表达式类型
 
-```
+```c++
 int i = 4;
 decltype(i) a; //推导结果为int。a的类型为int。
+
+//decltype处理顶层const和引用的方式与auto有些许不同，如果decltype使用的表达式是一个变量，则decltype返回该变量的类型（包括顶层const和引用在内）
+//需要指出的是引用从来都作为其所指对象的同义词出现，只有用在decltype处是一个例外
+const int ci = 0, &cj = ci;
+decltype(ci) x = 0; // x的类型是 const int
+decltype(cj) y = x; // y的类型是 const int& ,y 绑定到变量x
+decltype(cj) z; //错误：z是一个引用，必须初始化，
+
+//如果declpyte使用的表达式不是一个变量，则decltype返回 表达式结果 对应的类型
+//如果表达式的内容是解引用操作，则decltype将得到引用类型。这意味着该表达式的结果对象能作为一条赋值语句的左值。如：解引用指针可以得到指针所指的对象，而且还能给这个对象赋值。
+int i = 42, *p = &i, &r = i;
+decltype(r+0) b; //正确：加法表达式的结果是int，因此b是一个（未初始化的）int
+decltype(*p) c; //错误：c是int& ，必须初始化
+
+//decltype与auto另一个重要区别：decltype的结果类型与表达式形式密切相关。有一种情况要特别注意：
+//对于decltype所用的表达式来说，如果变量名加上了一对括号，则得到的类型与不加括号时会有所不同。如果使用的是不加括号的变量，则得到的结果就是该变量的类型；如果给变量加上了一层或多层括号，编译器就会把它当成是一个表达式。变量是一种可以作为赋值语句左值的特殊表达式，所以这样的decltype就会得到引用类型。
+decltype((i)) d; //错误：d是int&，必须初始化
+decltype(i) e; //正确：e是一个未初始化的int
+
 ```
 
 ### 1.2 与using/typedef合用，用于定义类型。
